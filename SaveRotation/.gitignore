@@ -1,0 +1,6 @@
+*.txt
+*.save
+main.py
+.venv
+.idea
+
