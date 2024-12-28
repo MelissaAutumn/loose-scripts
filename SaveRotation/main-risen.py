@@ -1,4 +1,5 @@
 import argparse
+import os
 import shutil
 import sys
 import time
@@ -69,12 +70,14 @@ def load_save(file_path: Path, rotation_number: int):
 def main(file_path: Path):
     last_rotate = 0
     max_rotation = 100
+    max_rotations_reached = False
 
     # Determine what our last_rotation should start as
     file_name = file_path.stem
     path = str(file_path).replace(file_path.name, '')
-    glob_path = path + '*'
+    glob_path = path + '*.save'
     files = glob(glob_path)
+    print(files)
 
     for file in files:
         next_rotation_file = rotate_file_format.format(file_name=file_name, rotate=last_rotate + 1)
@@ -82,7 +85,19 @@ def main(file_path: Path):
             last_rotate += 1
             if last_rotate > max_rotation:
                 last_rotate = 0
+                max_rotations_reached = True
                 break
+
+    # Get the last updated so we're not just starting at zero everytime
+    if max_rotations_reached:
+        # Get the last one
+        files = list(reversed(sorted(files, key=os.path.getmtime)))
+        file_prefix = rotate_file_format.format(file_name=file_name, rotate='')
+        for file in files:
+            if file_prefix in file:
+                save_game_name = Path(file).stem
+                # Now that's an assumption!
+                last_rotate = int(save_game_name.replace(file_prefix, ''))
 
     log.info(f"Last rotation set to {last_rotate}")
 
